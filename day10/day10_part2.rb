@@ -18,7 +18,6 @@ origin_ast = [36,26]
 quads = [{},{},{},{}]
 
 asteroids.each do |target_ast|
-  # puts "checking #{target_ast}"
   next if origin_ast == target_ast
 
   r_dist = target_ast[0] - origin_ast[0]
@@ -39,10 +38,6 @@ end
 angles = quads.map do |quad|
   quad.sort_by { |k,v| k }.map { |k,v| [k, v.sort_by { |t| t.dist.abs } ] }
 end.flatten(1)
-
-# i = angles.index { |angle, _| angle == 0 }
-
-p angles.map {|a,_| a }
 
 i = 0
 
