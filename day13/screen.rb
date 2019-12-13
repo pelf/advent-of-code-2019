@@ -28,7 +28,7 @@ class Screen
   end
 
   def read
-    sleep 0.005
+    # sleep 0.005
     ball_x <=> paddle
   end
 
