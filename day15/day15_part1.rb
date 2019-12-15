@@ -1,8 +1,8 @@
-require_relative './screen'
+require_relative './robot'
 require_relative '../misc/machine'
 
 input = File.read("input.txt").chomp
 
-screen = Screen.new
-machine = Machine.new(input, screen)
+robot = Robot.new
+machine = Machine.new(input, robot)
 machine.run

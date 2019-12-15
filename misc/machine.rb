@@ -1,5 +1,5 @@
-require_relative '../misc/debugger'
-require_relative '../misc/param'
+require_relative './debugger'
+require_relative './param'
 
 class Machine
   attr_reader :insts, :pos, :base, :io, :debugger
@@ -9,10 +9,7 @@ class Machine
     @pos = 0
     @base = 0
     @io = io
-    @debugger = Debugger.new(enabled: true)
-
-    # part 2: set address 0 to 2
-    @insts[0] = "2"
+    @debugger = Debugger.new(enabled: false)
   end
 
   def run
