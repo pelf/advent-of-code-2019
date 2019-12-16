@@ -1,0 +1,12 @@
+# Compose file reference: https://docs.docker.com/compose/compose-file/
+version: "3.4"
+
+services:
+  crystal: &defaults
+    container_name: crystal
+    build:
+      context: .
+      args: []
+    command: bash
+    volumes:
+      - ./:/crystal/

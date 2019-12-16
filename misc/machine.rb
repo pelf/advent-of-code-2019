@@ -4,12 +4,12 @@ require_relative './param'
 class Machine
   attr_reader :insts, :pos, :base, :io, :debugger
 
-  def initialize(input, io)
+  def initialize(input, io, debugger: nil)
     @insts = input.split(",")
     @pos = 0
     @base = 0
     @io = io
-    @debugger = Debugger.new(enabled: false)
+    @debugger = debugger
   end
 
   def run
@@ -96,7 +96,7 @@ class Machine
         raise "oops!"
       end
 
-      debugger.add(@pos, opcode, [param1, param2, param3].compact)
+      debugger.add(@pos, opcode, [param1, param2, param3].compact) if debugger
     end
   end
 
