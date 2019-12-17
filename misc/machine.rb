@@ -1,4 +1,3 @@
-require_relative './debugger'
 require_relative './param'
 
 class Machine

@@ -4,8 +4,6 @@ class Robot
   NEW_LINE = 10
   SCAFFOLD = 35
 
-  SLEEP_ON_INPUT = 0.000
-
   def initialize
     @squares = []
     @row = 0
