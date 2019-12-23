@@ -5,7 +5,7 @@ class Machine
 
   attr_reader :insts, :pos, :base, :io, :debugger
 
-  def initialize(input, io, step = false, debugger: nil)
+  def initialize(input, io, debugger: nil)
     @insts = input.split(",")
     @pos = 0
     @base = 0

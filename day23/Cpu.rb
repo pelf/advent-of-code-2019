@@ -22,8 +22,7 @@ class Cpu
     # message done?
     if @state == 3
       # pass it on
-      @memory.write(@buffer[0], @buffer[1])
-      @memory.write(@buffer[0], @buffer[2])
+      @memory.write(*@buffer)
       # reset
       @state = 0
       @buffer = []

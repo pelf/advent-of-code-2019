@@ -5,7 +5,6 @@ class Master
   def initialize(input)
     @memory = []
     @machines = []
-    @done = false
 
     50.times do |n|
       @memory[n] = []
@@ -15,10 +14,10 @@ class Master
   end
 
   def run
-    i = 0
     loop do
-      @machines[i].step
-      i = (i + 1) % 50
+      @machines.each do |machine|
+        machine.step
+      end
     end
   end
 
@@ -26,15 +25,13 @@ class Master
     @memory[address].empty? ? -1 : @memory[address].shift
   end
 
-  def write(address, val)
+  def write(address, x, y)
     if address == 255
-      if @done
-        puts val
-        exit
-      end
-      @done = true
+      puts y
+      exit
     else
-      @memory[address] << val
+      @memory[address] << x
+      @memory[address] << y
     end
   end
 end
