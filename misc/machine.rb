@@ -1,102 +1,110 @@
 require_relative './param'
 
 class Machine
+  Halt = Class.new(StandardError)
+
   attr_reader :insts, :pos, :base, :io, :debugger
 
-  def initialize(input, io, debugger: nil)
+  def initialize(input, io, step = false, debugger: nil)
     @insts = input.split(",")
     @pos = 0
     @base = 0
     @io = io
+    @step = step
     @debugger = debugger
+  end
+
+  def step
+    inst = insts[@pos].dup
+    # puts " ------ "
+    # p "[#{@pos}]", inst, insts
+
+    if inst.size > 2
+      opcode = inst.slice!(-2,2).to_i
+      mode1 = inst.slice!(-1,1)
+      mode2 = inst.slice!(-1,1) || "0"
+      mode3 = inst.slice!(-1,1) || "0"
+    else
+      opcode = inst.to_i
+      mode1 = mode2 = mode3 = "0"
+    end
+
+    param1 = param2 = param3 = nil
+
+    # puts "#{opcode} #{mode1} #{mode2} #{mode3}"
+    case opcode
+    when 1 # sum
+      param1, param2, param3 = read_params(3, mode1, mode2, mode3)
+      sum = param1.val + param2.val
+      insts[param3.pos] = sum.to_s
+      param3.val = sum
+      # puts "summing #{param1} + #{param2} = #{sum} into #{param3}"
+      @pos += 4
+    when 2 # mult
+      param1, param2, param3 = read_params(3, mode1, mode2, mode3)
+      mult = param1.val * param2.val
+      insts[param3.pos] = mult.to_s
+      param3.val = mult
+      # puts "multing #{param1} * #{param2} = #{sum} into #{param3}"
+      @pos += 4
+    when 3 # input
+      input = io.read
+      param1 = read_params(1)
+      # FIXME
+      param1 = Param.new(param1.mode, input, param1.val, output: true)
+      if mode1 == "2"
+        param1.mode = 2
+        param1.pos = param1.pos + @base
+      end
+      insts[param1.pos] = input
+      # puts "input #{input} into #{param1}"
+      @pos += 2
+    when 4 # output
+      param1 = read_params(1, mode1)
+      param1.output = true
+      # puts "output: #{param1}"
+      io.write(param1.val)
+      @pos += 2
+    when 5 # jump unless zero
+      param1, param2 = read_params(2, mode1, mode2)
+      # puts "jump unless zero #{param1} -> #{param2}"
+      @pos = param1.val != 0 ? param2.val : (@pos + 3)
+    when 6 # jump if zero
+      param1, param2 = read_params(2, mode1, mode2)
+      # puts "jump if zero #{param1} -> #{param2}"
+      @pos = param1.val == 0 ? param2.val : (@pos + 3)
+    when 7 # less than
+      param1, param2, param3 = read_params(3, mode1, mode2, mode3)
+      res = param1.val < param2.val ? "1" : "0"
+      insts[param3.pos] = res
+      # puts "less than #{param1} < #{param2} ? [#{param3}] = #{insts[param3]}"
+      @pos += 4
+    when 8 # equals
+      param1, param2, param3 = read_params(3, mode1, mode2, mode3)
+      res = param1.val == param2.val ? "1" : "0"
+      insts[param3.pos] = res
+      # puts "equals #{param1} == #{param2} ? [#{param3}] = #{insts[param3]}"
+      @pos += 4
+    when 9
+      param1 = read_params(1, mode1)
+      @base += param1.val
+      # puts " moved @base to #{@base}"
+      @pos += 2
+    when 99
+      io.halt
+      raise Halt
+    else
+      raise "oops!"
+    end
+
+    debugger.add(@pos, opcode, [param1, param2, param3].compact) if debugger
   end
 
   def run
     loop do
-      inst = insts[@pos].dup
-      # puts " ------ "
-      # p "[#{@pos}]", inst, insts
-
-      if inst.size > 2
-        opcode = inst.slice!(-2,2).to_i
-        mode1 = inst.slice!(-1,1)
-        mode2 = inst.slice!(-1,1) || "0"
-        mode3 = inst.slice!(-1,1) || "0"
-      else
-        opcode = inst.to_i
-        mode1 = mode2 = mode3 = "0"
-      end
-
-      param1 = param2 = param3 = nil
-
-      # puts "#{opcode} #{mode1} #{mode2} #{mode3}"
-      case opcode
-      when 1 # sum
-        param1, param2, param3 = read_params(3, mode1, mode2, mode3)
-        sum = param1.val + param2.val
-        insts[param3.pos] = sum.to_s
-        param3.val = sum
-        # puts "summing #{param1} + #{param2} = #{sum} into #{param3}"
-        @pos += 4
-      when 2 # mult
-        param1, param2, param3 = read_params(3, mode1, mode2, mode3)
-        mult = param1.val * param2.val
-        insts[param3.pos] = mult.to_s
-        param3.val = mult
-        # puts "multing #{param1} * #{param2} = #{sum} into #{param3}"
-        @pos += 4
-      when 3 # input
-        input = io.read
-        param1 = read_params(1)
-        # FIXME
-        param1 = Param.new(param1.mode, input, param1.val, output: true)
-        if mode1 == "2"
-          param1.mode = 2
-          param1.pos = param1.pos + @base
-        end
-        insts[param1.pos] = input
-        # puts "input #{input} into #{param1}"
-        @pos += 2
-      when 4 # output
-        param1 = read_params(1, mode1)
-        param1.output = true
-        # puts "output: #{param1}"
-        io.write(param1.val)
-        @pos += 2
-      when 5 # jump unless zero
-        param1, param2 = read_params(2, mode1, mode2)
-        # puts "jump unless zero #{param1} -> #{param2}"
-        @pos = param1.val != 0 ? param2.val : (@pos + 3)
-      when 6 # jump if zero
-        param1, param2 = read_params(2, mode1, mode2)
-        # puts "jump if zero #{param1} -> #{param2}"
-        @pos = param1.val == 0 ? param2.val : (@pos + 3)
-      when 7 # less than
-        param1, param2, param3 = read_params(3, mode1, mode2, mode3)
-        res = param1.val < param2.val ? "1" : "0"
-        insts[param3.pos] = res
-        # puts "less than #{param1} < #{param2} ? [#{param3}] = #{insts[param3]}"
-        @pos += 4
-      when 8 # equals
-        param1, param2, param3 = read_params(3, mode1, mode2, mode3)
-        res = param1.val == param2.val ? "1" : "0"
-        insts[param3.pos] = res
-        # puts "equals #{param1} == #{param2} ? [#{param3}] = #{insts[param3]}"
-        @pos += 4
-      when 9
-        param1 = read_params(1, mode1)
-        @base += param1.val
-        # puts " moved @base to #{@base}"
-        @pos += 2
-      when 99
-        io.halt
-        break
-      else
-        raise "oops!"
-      end
-
-      debugger.add(@pos, opcode, [param1, param2, param3].compact) if debugger
+      step
     end
+  rescue Halt
   end
 
   private
